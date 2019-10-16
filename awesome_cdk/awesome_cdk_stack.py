@@ -1,6 +1,7 @@
 from aws_cdk import core
 
 from .vpc_construct import VpcConstruct
+from .asg_construct import AsgConstruct
 
 class AwesomeCdkStack(core.Stack):
 
@@ -8,4 +9,5 @@ class AwesomeCdkStack(core.Stack):
         super().__init__(scope, id, **kwargs)
 
         # The code that defines your stack goes here
-        vpc = VpcConstruct(self, "MyHelloConstruct")
+        vpc = VpcConstruct(self, "MyVPCConstruct")
+        asg = AsgConstruct(self, "MyASGConstruct", vpc._vpc)
