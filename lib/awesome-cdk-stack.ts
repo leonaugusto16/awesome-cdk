@@ -28,7 +28,7 @@ export class AwesomeCdkStack extends cdk.Stack {
       vpc,
       allowAllOutbound: true,
       description: 'General security group define nodes',
-      securityGroupName: 'sg-nodes-test'
+      securityGroupName: 'sgNodesTest'
     });
 
     sg.addIngressRule(ec2.Peer.ipv4(cidr), ec2.Port.allUdp(), "Configs Port");
