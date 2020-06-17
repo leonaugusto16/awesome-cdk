@@ -28,3 +28,18 @@ After the stack is deployed...
 * With kubectl apply k8s/example-microservice/ecsdemo-*
 * Verify services and ELB domain
 * Access page web
+
+## Execute bitnami/nginx with helm
+
+Only deploy stack...
+
+Deploy Helm
+```javascript
+new eks.HelmChart(this, 'Webserver', {
+    cluster: clusterMain,
+    chart: 'nginx',
+    repository: 'https://charts.bitnami.com/bitnami',
+    namespace: 'default'
+});
+```
+

@@ -1,6 +1,7 @@
 import * as cdk from '@aws-cdk/core';
 import iam = require('@aws-cdk/aws-iam');
 import ec2 = require('@aws-cdk/aws-ec2');
+import eks = require('@aws-cdk/aws-eks');
 
 import { EksCluster } from './eks-cluster'
 
@@ -35,10 +36,19 @@ export class AwesomeCdkStack extends cdk.Stack {
     sg.addIngressRule(ec2.Peer.ipv4(cidr), ec2.Port.allTcp(), "Configs Port");
     sg.addIngressRule(ec2.Peer.ipv4(cidr), ec2.Port.allIcmp(), "Configs Port");
 
-    const clusterEks = new EksCluster(this,'EKS-Cluster',{
+    const eksCluster = new EksCluster(this,'EKS-Cluster');
+    const clusterMain = eksCluster.createClusterMain({
       vpc,
       clusterRole: clusterAdmin,
       nodeRole: instanceRole
+    });
+    eksCluster.createNodeGroup(clusterMain)
+
+    new eks.HelmChart(this, 'Webserver', {
+      cluster: clusterMain,
+      chart: 'nginx',
+      repository: 'https://charts.bitnami.com/bitnami',
+      namespace: 'default'
     });
 
   }

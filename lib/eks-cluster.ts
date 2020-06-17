@@ -9,24 +9,29 @@ export interface EksProps {
   nodeRole: iam.IRole
 }
 export class EksCluster extends cdk.Construct {
-  constructor(scope: cdk.Construct, id: string, props: EksProps) {
+  constructor(scope: cdk.Construct, id: string, props?: EksProps) {
     super(scope, id);
-    
-    const cluster = new eks.Cluster(this, 'ClusterCD', {
+  }
+  createClusterMain(props: EksProps){
+    let cluster = new eks.Cluster(this, 'ClusterCD', {
         mastersRole: props.clusterRole,
         vpc: props.vpc,
         defaultCapacity: 0
     });
-
+    return cluster
+  }
+  createNodeGroup(cluster: eks.Cluster){
     cluster.addNodegroup('NodeGroup', {
-      instanceType: new ec2.InstanceType('t2.medium'),
-      nodegroupName: 'NodeGroupCD',
-      desiredSize: 3, 
-      minSize: 2,
-      forceUpdate: true,
-      labels: {
-        "node": "node-group-cd"
-      }
-    });
+        instanceType: new ec2.InstanceType('t2.medium'),
+        nodegroupName: 'NodeGroupCD',
+        desiredSize: 3, 
+        minSize: 2,
+        forceUpdate: true,
+        labels: {
+          "node": "node-group-cd"
+        }
+      });
+
+      return cluster
   }
 }
