@@ -12,7 +12,6 @@ export class EksCluster extends cdk.Construct {
   constructor(scope: cdk.Construct, id: string, props: EksProps) {
     super(scope, id);
     
-    // now define the cluster and map role to "masters" RBAC group
     const cluster = new eks.Cluster(this, 'ClusterCD', {
         mastersRole: props.clusterRole,
         vpc: props.vpc,
@@ -29,6 +28,5 @@ export class EksCluster extends cdk.Construct {
         "node": "node-group-cd"
       }
     });
-
   }
 }

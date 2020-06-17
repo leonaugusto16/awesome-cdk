@@ -7,7 +7,7 @@ import { EksCluster } from './eks-cluster'
 export class AwesomeCdkStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
-    const cidr = "10.0.0.0/16"
+    const cidr = "10.0.0.0/24"
 
     const vpc = new ec2.Vpc(this, 'TestVpc', {
       cidr
@@ -35,10 +35,11 @@ export class AwesomeCdkStack extends cdk.Stack {
     sg.addIngressRule(ec2.Peer.ipv4(cidr), ec2.Port.allTcp(), "Configs Port");
     sg.addIngressRule(ec2.Peer.ipv4(cidr), ec2.Port.allIcmp(), "Configs Port");
 
-    new EksCluster(this,'EKS-Cluster',{
+    const clusterEks = new EksCluster(this,'EKS-Cluster',{
       vpc,
       clusterRole: clusterAdmin,
       nodeRole: instanceRole
-    })
+    });
+
   }
 }
