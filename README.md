@@ -12,7 +12,7 @@ The `cdk.json` file tells the CDK Toolkit how to execute your app.
  * `cdk diff`        compare deployed stack with current state
  * `cdk synth`       emits the synthesized CloudFormation template
 
-## Create Dash Board
+## Create DashBoard
 
 After the stack is deployed...
 
@@ -21,3 +21,10 @@ After the stack is deployed...
 * Create proxy: kubectl proxy --port=8080 --disable-filter=true
 * See page dashboard: http://127.0.0.1:8080/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/#/login
 
+## Execute example microservice
+
+After the stack is deployed...
+* Use the outputs to access the tokens and update your kubeconfig
+* With kubectl apply k8s/example-microservice/ecsdemo-*
+* Verify services and ELB domain
+* Access page web
