@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: php-apache
+  labels:
+    run: php-apache
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      run: php-apache
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        run: php-apache
+    spec:
+      containers:
+      - image: us.gcr.io/k8s-artifacts-prod/hpa-example
+        imagePullPolicy: Always
+        name: php-apache
+        ports:
+        - containerPort: 80
+          protocol: TCP
+        resources:
+          requests:
+            cpu: 200m

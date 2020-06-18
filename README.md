@@ -60,3 +60,36 @@ kubectl describe deployment readiness-deployment | grep Replicas:
 Replicas:               3 desired | 3 updated | 3 total | 2 available | 1 unavailable
 
 Readiness does not restart the pod, it only removes it from external access.
+
+## Execute example with Autoscaling
+
+Automatic scaling in K8s comes in two forms:
+
+* **Horizontal Pod Autoscaler (HPA)** scales the pods in a deployment or replica set. It is implemented as a K8s API resource and a controller. The controller manager queries the resource utilization against the metrics specified in each HorizontalPodAutoscaler definition. It obtains the metrics from either the resource metrics API (for per-pod resource metrics), or the custom metrics API (for all other metrics).
+
+Deploy the Metrics Server: kubectl create namespace metrics
+
+``` javascript 
+new eks.HelmChart(this, 'metrics', {
+    cluster: clusterMain,
+    chart: 'metrics-server',
+    repository: 'https://kubernetes-charts.storage.googleapis.com',
+    namespace: 'metrics'
+});
+```
+Metrics Server is a cluster-wide aggregator of resource usage data. These metrics will drive the scaling behavior of the deployments.
+
+Apply project: kubectl apply k8s/scale-pods-hpa-sample
+
+Create request to apache:
+kubectl run -i --tty load-generator --image=busybox /bin/sh
+
+Execute a while loop to continue getting http:///php-apache
+
+while true; do wget -q -O - http://php-apache; done
+
+Watch the HPA with the following command
+
+kubectl get hpa -w
+
+* **Cluster Autoscaler (CA)** a component that automatically adjusts the size of a Kubernetes Cluster so that all pods have a place to run and there are no unneeded nodes.
