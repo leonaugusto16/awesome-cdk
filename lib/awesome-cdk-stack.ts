@@ -1,7 +1,6 @@
 import * as cdk from '@aws-cdk/core';
 import iam = require('@aws-cdk/aws-iam');
 import ec2 = require('@aws-cdk/aws-ec2');
-import elbv2 = require('@aws-cdk/aws-elasticloadbalancingv2');
 import eks = require('@aws-cdk/aws-eks');
 import { YOUR_IP } from './utils/config';
 
@@ -27,22 +26,6 @@ export class AwesomeCdkStack extends cdk.Stack {
       assumedBy: new iam.AccountRootPrincipal()
     });
 
-    // const instanceRole = new iam.Role(this, 'instanceRole', {
-    //   assumedBy: new iam.ServicePrincipal('ec2.amazonaws.com'),
-    // });
-    // instanceRole.addToPolicy(new iam.PolicyStatement({
-    //   actions: ["ec2:DescribeInstances", "ec2:CreateTags", "ec2:DescribeTags"],
-    //   resources: ['*'],
-    // }));
-    // instanceRole.addToPolicy(new iam.PolicyStatement({
-    //   actions: ["autoscaling:DescribeAutoScalingGroups",
-    //             "autoscaling:DescribeAutoScalingInstances",
-    //             "autoscaling:SetDesiredCapacity",
-    //             "autoscaling:TerminateInstanceInAutoScalingGroup",
-    //             "autoscaling:DescribeTags"],
-    //   resources: ['*'],
-    // }));
-
     const sg = new ec2.SecurityGroup(this, "Sg", {
       vpc,
       allowAllOutbound: true,
@@ -53,23 +36,6 @@ export class AwesomeCdkStack extends cdk.Stack {
     sg.addIngressRule(ec2.Peer.ipv4(cidr), ec2.Port.allTcp(), "Configs Port");
     sg.addIngressRule(ec2.Peer.ipv4(cidr), ec2.Port.allIcmp(), "Configs Port");
     sg.addIngressRule(ec2.Peer.ipv4(YOUR_IP), ec2.Port.allTcp(), "Configs Port");
-
-    const alb = new elbv2.ApplicationLoadBalancer(this, 'AlbEks', {
-      loadBalancerName: 'AlbEks',
-      vpc,
-      securityGroup: sg,
-      internetFacing: true,
-      vpcSubnets: {subnetType: ec2.SubnetType.PUBLIC}
-    });
-
-    const httpListener = alb.addListener("HttpListenerEks", {
-      protocol: elbv2.ApplicationProtocol.HTTP,
-      port: 80,
-      open: true
-    });
-    httpListener.addFixedResponse("FixedResponse", {
-      statusCode: "404"
-    });
 
     const eksCluster = new EksCluster(this,'EKS-Cluster');
     const clusterMain = eksCluster.createClusterMain({
@@ -83,55 +49,56 @@ export class AwesomeCdkStack extends cdk.Stack {
       nodeRole: eksRole
     });
 
-    httpListener.addTargets('TargetGroup', {
-      targetGroupName: 'eksTest',
-      port: 30080,
-      protocol: elbv2.ApplicationProtocol.HTTP,
-      targets: [eksNodeGroup]
-    });
 
-    const clusterAdminRole = new iam.Role(this, 'clusterAdmin', {
-      roleName: 'KubernetesAdmin',
-      assumedBy: new iam.AccountRootPrincipal()
-    });
+    // const clusterAdminRole = new iam.Role(this, 'clusterAdmin', {
+    //   roleName: 'KubernetesAdmin',
+    //   assumedBy: new iam.AccountRootPrincipal()
+    // });
 
-    const developerRole = new iam.Role(this, 'developer', {
-          roleName: 'KubernetesDeveloper',
-          assumedBy: new iam.AccountRootPrincipal()
-    });
+    // const developerRole = new iam.Role(this, 'developer', {
+    //       roleName: 'KubernetesDeveloper',
+    //       assumedBy: new iam.AccountRootPrincipal()
+    // });
 
-    const eksAdminGroup = new iam.Group(this, 'eks-administrators', {
-      groupName: 'eks-administrators',
-    });
+    // const eksAdminGroup = new iam.Group(this, 'eks-administrators', {
+    //   groupName: 'eks-administrators',
+    // });
 
-    const eksDeveloperGroup = new iam.Group(this, 'eks-developers', {
-          groupName: 'eks-developers',
-    });
+    // const eksDeveloperGroup = new iam.Group(this, 'eks-developers', {
+    //       groupName: 'eks-developers',
+    // });
 
-    const adminPolicyStatement = new iam.PolicyStatement({
-      resources: [clusterAdminRole.roleArn],
-      actions: ['sts:AssumeRole'],
-      effect: iam.Effect.ALLOW
-    });
+    // const adminPolicyStatement = new iam.PolicyStatement({
+    //   resources: [clusterAdminRole.roleArn],
+    //   actions: ['sts:AssumeRole'],
+    //   effect: iam.Effect.ALLOW
+    // });
 
-    const developerPolicyStatement = new iam.PolicyStatement({
-      resources: [developerRole.roleArn],
-      actions: ['sts:AssumeRole'],
-      effect: iam.Effect.ALLOW
-    });
+    // const developerPolicyStatement = new iam.PolicyStatement({
+    //   resources: [developerRole.roleArn],
+    //   actions: ['sts:AssumeRole'],
+    //   effect: iam.Effect.ALLOW
+    // });
   
-    const assumeEKSAdminRole = new iam.ManagedPolicy(this, 'assumeEKSAdminRole', {
-      managedPolicyName: 'assume-KubernetesAdmin-role'
-    });
-    assumeEKSAdminRole.addStatements(adminPolicyStatement);
-    assumeEKSAdminRole.attachToGroup(eksAdminGroup);
+    // const assumeEKSAdminRole = new iam.ManagedPolicy(this, 'assumeEKSAdminRole', {
+    //   managedPolicyName: 'assume-KubernetesAdmin-role'
+    // });
+    // assumeEKSAdminRole.addStatements(adminPolicyStatement);
+    // assumeEKSAdminRole.attachToGroup(eksAdminGroup);
 
 
-    const assumeEKSDeveloperRole = new iam.ManagedPolicy(this, 'assumeEKSDeveloperRole', {
-        managedPolicyName: 'assume-KubernetesDeveloper-role'
-    });
-    assumeEKSDeveloperRole.addStatements(developerPolicyStatement);
-    assumeEKSDeveloperRole.attachToGroup(eksDeveloperGroup);
+    // const assumeEKSDeveloperRole = new iam.ManagedPolicy(this, 'assumeEKSDeveloperRole', {
+    //     managedPolicyName: 'assume-KubernetesDeveloper-role'
+    // });
+    // assumeEKSDeveloperRole.addStatements(developerPolicyStatement);
+    // assumeEKSDeveloperRole.attachToGroup(eksDeveloperGroup);
+
+    // clusterMain.awsAuth.addRoleMapping(developerRole, {
+    //   groups: [],
+    //   username: 'k8s-developer-user'
+    // });
+
+    // clusterMain.awsAuth.addMastersRole(clusterAdminRole, 'k8s-cluster-admin-user');
 
     // new eks.HelmChart(this, 'Webserver', {
     //   cluster: clusterMain,
