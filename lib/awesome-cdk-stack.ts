@@ -90,7 +90,48 @@ export class AwesomeCdkStack extends cdk.Stack {
       targets: [eksNodeGroup]
     });
 
+    const clusterAdminRole = new iam.Role(this, 'clusterAdmin', {
+      roleName: 'KubernetesAdmin',
+      assumedBy: new iam.AccountRootPrincipal()
+    });
 
+    const developerRole = new iam.Role(this, 'developer', {
+          roleName: 'KubernetesDeveloper',
+          assumedBy: new iam.AccountRootPrincipal()
+    });
+
+    const eksAdminGroup = new iam.Group(this, 'eks-administrators', {
+      groupName: 'eks-administrators',
+    });
+
+    const eksDeveloperGroup = new iam.Group(this, 'eks-developers', {
+          groupName: 'eks-developers',
+    });
+
+    const adminPolicyStatement = new iam.PolicyStatement({
+      resources: [clusterAdminRole.roleArn],
+      actions: ['sts:AssumeRole'],
+      effect: iam.Effect.ALLOW
+    });
+
+    const developerPolicyStatement = new iam.PolicyStatement({
+      resources: [developerRole.roleArn],
+      actions: ['sts:AssumeRole'],
+      effect: iam.Effect.ALLOW
+    });
+  
+    const assumeEKSAdminRole = new iam.ManagedPolicy(this, 'assumeEKSAdminRole', {
+      managedPolicyName: 'assume-KubernetesAdmin-role'
+    });
+    assumeEKSAdminRole.addStatements(adminPolicyStatement);
+    assumeEKSAdminRole.attachToGroup(eksAdminGroup);
+
+
+    const assumeEKSDeveloperRole = new iam.ManagedPolicy(this, 'assumeEKSDeveloperRole', {
+        managedPolicyName: 'assume-KubernetesDeveloper-role'
+    });
+    assumeEKSDeveloperRole.addStatements(developerPolicyStatement);
+    assumeEKSDeveloperRole.attachToGroup(eksDeveloperGroup);
 
     // new eks.HelmChart(this, 'Webserver', {
     //   cluster: clusterMain,
