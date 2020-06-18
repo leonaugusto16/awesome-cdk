@@ -44,12 +44,12 @@ export class AwesomeCdkStack extends cdk.Stack {
     });
     eksCluster.createNodeGroup(clusterMain)
 
-    new eks.HelmChart(this, 'Webserver', {
-      cluster: clusterMain,
-      chart: 'nginx',
-      repository: 'https://charts.bitnami.com/bitnami',
-      namespace: 'default'
-    });
+    // new eks.HelmChart(this, 'Webserver', {
+    //   cluster: clusterMain,
+    //   chart: 'nginx',
+    //   repository: 'https://charts.bitnami.com/bitnami',
+    //   namespace: 'default'
+    // });
 
   }
 }
