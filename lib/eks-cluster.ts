@@ -24,24 +24,37 @@ export class EksCluster extends cdk.Construct {
     return cluster
   }
   createNodeGroup(cluster: eks.Cluster , props: EksProps){
-      let nodeGroup = new autoscaling.AutoScalingGroup(this, 'AsgEks', {
-        vpc: props.vpc,
-        instanceType: new ec2.InstanceType('t2.medium'),
-        machineImage: new eks.EksOptimizedImage(),
-        keyName: KEY_NAME,
-        minCapacity: 1,
-        maxCapacity: 5,
-        desiredCapacity: 3,
-        updateType: autoscaling.UpdateType.ROLLING_UPDATE,
-        vpcSubnets: {subnetType: ec2.SubnetType.PRIVATE}
-      });
+    let nodeGroup = new autoscaling.AutoScalingGroup(this, 'AsgEks', {
+      vpc: props.vpc,
+      instanceType: new ec2.InstanceType('t2.medium'),
+      machineImage: new eks.EksOptimizedImage(),
+      keyName: KEY_NAME,
+      minCapacity: 1,
+      maxCapacity: 5,
+      desiredCapacity: 3,
+      updateType: autoscaling.UpdateType.ROLLING_UPDATE,
+      vpcSubnets: {subnetType: ec2.SubnetType.PRIVATE}
+    });
 
-      nodeGroup.scaleOnCpuUtilization('up', {targetUtilizationPercent: 80})
+    nodeGroup.scaleOnCpuUtilization('up', {targetUtilizationPercent: 80})
+    cluster.addAutoScalingGroup(nodeGroup, {
+      mapRole: true
+    })
 
-      cluster.addAutoScalingGroup(nodeGroup, {
-        mapRole: true
-      })
-
-      return nodeGroup
+    return nodeGroup
+  }
+  createManagedNodeGroup(cluster: eks.Cluster){
+    let nodeGroup = cluster.addNodegroup('NodeGroup', {
+      instanceType: new ec2.InstanceType('t2.medium'),
+      nodegroupName: 'NodeGroupCD',
+      maxSize: 5,
+      desiredSize: 3, 
+      minSize: 2,
+      forceUpdate: true,
+      labels: {
+        "node": "node-group-cd"
+      }
+    });
+    return nodeGroup
   }
 }
