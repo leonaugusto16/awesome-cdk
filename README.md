@@ -93,3 +93,10 @@ Watch the HPA with the following command
 kubectl get hpa -w
 
 * **Cluster Autoscaler (CA)** a component that automatically adjusts the size of a Kubernetes Cluster so that all pods have a place to run and there are no unneeded nodes.
+
+In EKS there are some ways to manage worker nodes, in which case you can use managed node groups or autoscaling. We implemented both types. The main difference between the two is the level of control and management over the nodes, while the managed node groups do not have action or immediate control of the EC2 instances with automatic update, autoscaling you have total control of the instances.
+
+Using EKS with autoscaling there are two ways to scale your EC2 instances. Either use metrics from the autoscaling itself or use the k8s CA (cluster-autoscaler) (https://github.com/kubernetes/autoscaler). Lib @ arhea / aws-cdk-eks-cluster-autoscaler (https://www.npmjs.com/package/@arhea/aws-cdk-eks-cluster-autoscaler) is already prepared to implement this in the cluster, but I strongly recommend looking at the code and implementing it for greater control of the scaling of your instances. It is very simple to add manifests with eks + cdk.
+
+Deploy stack and apply k8s/scale-instances-ca-sample. For details see ClusterAutoscaler how to scale.
+
