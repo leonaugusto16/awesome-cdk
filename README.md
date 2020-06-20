@@ -111,27 +111,28 @@ Role-based access control (RBAC) is a method of regulating access to computer or
 
 The core logical components of RBAC are:
 
-Entity
-A group, user, or service account (an identity representing an application that wants to execute certain operations (actions) and requires permissions to do so).
+* Entity: A group, user, or service account (an identity representing an application that wants to execute certain operations (actions) and requires permissions to do so).
 
-Resource
-A pod, service, or secret that the entity wants to access using the certain operations.
+* Resource: A pod, service, or secret that the entity wants to access using the certain operations.
 
-Role
-Used to define rules for the actions the entity can take on various resources.
+* Role: Used to define rules for the actions the entity can take on various resources.
 
-Role binding
-This attaches (binds) a role to an entity, stating that the set of rules define the actions permitted by the attached entity on the specified resources.
+* Role binding: This attaches (binds) a role to an entity, stating that the set of rules define the actions permitted by the attached entity on the specified resources. There are two types of Roles (Role, ClusterRole) and the respective bindings (RoleBinding, ClusterRoleBinding). These differentiate between authorization in a namespace or cluster-wide.
 
-There are two types of Roles (Role, ClusterRole) and the respective bindings (RoleBinding, ClusterRoleBinding). These differentiate between authorization in a namespace or cluster-wide.
+* Namespace: Namespaces are an excellent way of creating security boundaries, they also provide a unique scope for object names as the ‘namespace’ name implies. They are intended to be used in multi-tenant environments to create virtual kubernetes clusters on the same physical cluster.
 
-Namespace
+* Aws-Auth: The aws-auth ConfigMap from the kube-system namespace must be edited in order to allow or new arn Groups. This file makes the mapping between IAM role and k8S RBAC rights. 
 
-Namespaces are an excellent way of creating security boundaries, they also provide a unique scope for object names as the ‘namespace’ name implies. They are intended to be used in multi-tenant environments to create virtual kubernetes clusters on the same physical cluster.
+Deploy stack, exist a construct (iam-groups) responsible for creating groups of dev and admin, with specific rules for the group of dev. Create user and add to dev group in IAM.
 
-Aws-Auth
+## Execute example with IAM Service Account to Role Pods
 
-The aws-auth ConfigMap from the kube-system namespace must be edited in order to allow or new arn Groups. This file makes the mapping between IAM role and k8S RBAC rights. 
+In Kubernetes version 1.12, support was added for a new ProjectedServiceAccountToken feature, which is an OIDC JSON web token that also contains the service account identity, and supports a configurable audience.
 
----
-Created a construct (iam-groups) responsible for creating groups of dev and admin, with specific rules for the group of dev. Create user and add to dev group in IAM.
+Amazon EKS now hosts a public OIDC discovery endpoint per cluster containing the signing keys for the ProjectedServiceAccountToken JSON web tokens so external systems, like IAM, can validate and accept the Kubernetes-issued OIDC tokens.
+
+OIDC federation access allows you to assume IAM roles via the Secure Token Service (STS), enabling authentication with an OIDC provider, receiving a JSON Web Token (JWT), which in turn can be used to assume an IAM role. Kubernetes, on the other hand, can issue so-called projected service account tokens, which happen to be valid OIDC JWTs for pods. Our setup equips each pod with a cryptographically-signed token that can be verified by STS against the OIDC provider of your choice to establish the pod’s identity
+
+Summary: It will be necessary to connect IAM services with the k8s OIDC provider. This is not implemented in Cloudformation, but there is a paleative lambda solution that you can see [here](https://bambooengineering.io/configuring-eks-for-iam-oidc-using-cloudformation/), this solution is used in eks.ServiceAccount (CDK). This implementation is in lib/example-iam-service-account (Construct).
+
+In the example, create a Service Account for our cluster (you can review this at Identity providers at IAM) and add a policy with permissions to list on S3. Together we have a pod with aws cli to test if the policy is respected. This implementation is similar to the task role in ECS.

@@ -6,6 +6,7 @@ import { YOUR_IP } from './utils/config';
 
 import { EksCluster } from './eks-cluster'
 import { IamGroupsEks } from './iam-groups'
+import { ServiceAccountEks } from './example-iam-service-account'
 
 export class AwesomeCdkStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
@@ -66,6 +67,8 @@ export class AwesomeCdkStack extends cdk.Stack {
       repository: 'https://kubernetes-charts.storage.googleapis.com',
       namespace: 'metrics'
     });
+
+    new ServiceAccountEks(this, 'ExamplePodWithRole', {clusterMain})
 
   }
 }
