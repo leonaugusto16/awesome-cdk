@@ -103,3 +103,35 @@ Deploy stack and apply k8s/scale-instances-ca-sample. For details see ClusterAut
 <blockquote class="twitter-tweet"><p lang="en" dir="ltr">Confused about how all the <a href="https://twitter.com/awscloud?ref_src=twsrc%5Etfw">@awscloud</a> container pieces fit together? Have a drawing! <a href="https://twitter.com/hashtag/awsreinvent?src=hash&amp;ref_src=twsrc%5Etfw">#awsreinvent</a> <a href="https://t.co/CxrCNZJVa6">pic.twitter.com/CxrCNZJVa6</a></p>&mdash; Abby Fuller (@abbyfuller) <a href="https://twitter.com/abbyfuller/status/1202016116580605952?ref_src=twsrc%5Etfw">December 4, 2019</a></blockquote>
 
 
+## Execute example with RBAC
+
+According to the official kubernetes docs:
+
+Role-based access control (RBAC) is a method of regulating access to computer or network resources based on the roles of individual users within an enterprise.
+
+The core logical components of RBAC are:
+
+Entity
+A group, user, or service account (an identity representing an application that wants to execute certain operations (actions) and requires permissions to do so).
+
+Resource
+A pod, service, or secret that the entity wants to access using the certain operations.
+
+Role
+Used to define rules for the actions the entity can take on various resources.
+
+Role binding
+This attaches (binds) a role to an entity, stating that the set of rules define the actions permitted by the attached entity on the specified resources.
+
+There are two types of Roles (Role, ClusterRole) and the respective bindings (RoleBinding, ClusterRoleBinding). These differentiate between authorization in a namespace or cluster-wide.
+
+Namespace
+
+Namespaces are an excellent way of creating security boundaries, they also provide a unique scope for object names as the ‘namespace’ name implies. They are intended to be used in multi-tenant environments to create virtual kubernetes clusters on the same physical cluster.
+
+Aws-Auth
+
+The aws-auth ConfigMap from the kube-system namespace must be edited in order to allow or new arn Groups. This file makes the mapping between IAM role and k8S RBAC rights. 
+
+---
+Created a construct (iam-groups) responsible for creating groups of dev and admin, with specific rules for the group of dev. Create user and add to dev group in IAM.
