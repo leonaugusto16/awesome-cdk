@@ -1,0 +1,9 @@
+# Block all connections in client
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  namespace: client
+  name: default-deny
+spec:
+  podSelector:
+    matchLabels: {}

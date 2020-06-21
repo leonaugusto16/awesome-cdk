@@ -136,3 +136,25 @@ OIDC federation access allows you to assume IAM roles via the Secure Token Servi
 Summary: It will be necessary to connect IAM services with the k8s OIDC provider. This is not implemented in Cloudformation, but there is a paleative lambda solution that you can see [here](https://bambooengineering.io/configuring-eks-for-iam-oidc-using-cloudformation/), this solution is used in eks.ServiceAccount (CDK). This implementation is in lib/example-iam-service-account (Construct).
 
 In the example, create a Service Account for our cluster (you can review this at Identity providers at IAM) and add a policy with permissions to list on S3. Together we have a pod with aws cli to test if the policy is respected. This implementation is similar to the task role in ECS.
+
+## Execute example calico
+
+### What is Calico?
+Calico is an open source networking and network security solution for containers, virtual machines, and native host-based workloads. Calico supports a broad range of platforms including Kubernetes, OpenShift, Docker EE, OpenStack, and bare metal services.
+
+Network policies allow you to define rules that determine what type of traffic is allowed to flow between different services. Using network policies you can also define rules to restrict traffic. They are a means to improve your cluster’s security.
+
+First start the calico service in the cluster: 
+``` bash
+kubectl apply -f k8s/calico/calico.yaml
+kubectl get daemonset calico-node --namespace=kube-system
+```
+Execute example stars in k8s/calico-resources:
+
+* 00 - Create namespaces stars
+* 10 - Deploy managemnet ui
+* 20 - Deploy backend and frontend in starts
+* 30 - Deploy client (Access ui to see all connections between pods)
+* 40 - Create network policy to deny all access in client and stars (Access ui to see all connections blocked between pods, including blocked with ui)
+* 50 - Allow access to management-ui with client and starts (No connections between pods, only with management-ui)
+* 60 - Allow access client -> frontend and  frontend -> backend
