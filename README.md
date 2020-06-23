@@ -158,3 +158,79 @@ Execute example stars in k8s/calico-resources:
 * 40 - Create network policy to deny all access in client and stars (Access ui to see all connections blocked between pods, including blocked with ui)
 * 50 - Allow access to management-ui with client and starts (No connections between pods, only with management-ui)
 * 60 - Allow access client -> frontend and  frontend -> backend
+
+## Execute example exposing service
+
+By default, Docker uses host-private networking, so containers can talk to other containers only if they are on the same machine. In order for Docker containers to communicate across nodes, there must be allocated ports on the machine’s own IP address, which are then forwarded or proxied to the containers. This obviously means that containers must either coordinate which ports they use very carefully or ports must be allocated dynamically.
+
+Coordinating ports across multiple developers is very difficult to do at scale and exposes users to cluster-level issues outside of their control. Kubernetes assumes that pods can communicate with other pods, regardless of which host they land on. We give every pod its own cluster-private-IP address so you do not need to explicitly create links between pods or map container ports to host ports. This means that containers within a Pod can all reach each other’s ports on localhost, and all pods in a cluster can see each other without NAT.
+
+### Cluster IP
+
+Apply k8s/example-exposing-service/00_run-my-nginx.yaml ...
+
+Kubernetes supports 2 primary modes of finding a Service - environment variables and DNS. The former works out of the box while the latter requires the CoreDNS cluster addon.
+ 
+ * Environment Variables: When a Pod runs on a Node, the kubelet adds a set of environment variables for each active Service. This introduces an ordering problem. 
+    ``` s
+    $ kubectl exec <YOUR_POD> -- printenv | grep SERVICE
+    KUBERNETES_SERVICE_PORT_HTTPS=443
+    MY_NGINX_SERVICE_HOST=172.20.165.84
+    MY_NGINX_SERVICE_PORT=80
+    KUBERNETES_SERVICE_HOST=172.20.0.1
+    KUBERNETES_SERVICE_PORT=443
+    ```
+    ```s
+    $ kubectl describe svc my-nginx
+    Name:              my-nginx
+    Namespace:         default
+    Labels:            <none>
+    Annotations:       kubectl.kubernetes.io/last-applied-configuration: ...
+    Selector:          run=my-nginx
+    Type:              ClusterIP
+    IP:                172.20.165.84
+    Port:              <unset>  80/TCP
+    TargetPort:        80/TCP
+    Endpoints:         10.0.0.4:80,10.0.0.52:80
+    Session Affinity:  None
+    Events:            <none>
+    ```
+* DNS: Kubernetes offers a DNS cluster addon Service that automatically assigns dns names to other Services. You can check if it’s running on your cluster:
+    ```s
+    $ kubectl get services kube-dns --namespace=kube-system
+
+    NAME       TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)         AGE
+    kube-dns   ClusterIP   172.20.0.10    <none>        53/UDP,53/TCP   8m
+    ```
+    Test dns internal...
+    ```s
+    $ kubectl run curl --image=radial/busyboxplus:curl -i --tty
+    (container) $ nslookup my-nginx
+    Server:    172.20.0.10
+    Address 1: 172.20.0.10 kube-dns.kube-system.svc.cluster.local
+
+    Name:      my-nginx
+    Address 1: 172.20.165.84 my-nginx.default.svc.cluster.local
+    (container) $ wget -q -O - my-nginx --> OK
+    ```
+### External IP 
+Currently the Service does not have an External IP, so let’s now recreate the Service to use a cloud load balancer, just change the Type of my-nginx Service from ClusterIP to LoadBalancer.
+
+Apply k8s/example-exposing-service/10_run-my-nginx.yaml ...
+
+Now, you have EXTERNAL-IP. The IP address in the EXTERNAL-IP column is the one that is available on the public internet. The CLUSTER-IP is only available inside your cluster/private cloud network.
+
+### Ingress
+
+What is Ingress? Ingress, added in Kubernetes v1.1, exposes HTTP and HTTPS routes from outside the cluster to services within the cluster. Traffic routing is controlled by rules defined on the Ingress resource.
+
+```s
+Internet---[ Ingress ]--|--|--[ Services ]
+```
+
+An Ingress can be configured to give services externally-reachable URLs, load balance traffic, terminate SSL, and offer name based virtual hosting. An Ingress controller is responsible for fulfilling the Ingress, usually with a loadbalancer, though it may also configure your edge router or additional frontends to help handle the traffic.
+
+An Ingress does not expose arbitrary ports or protocols. Exposing services other than HTTP and HTTPS to the internet typically uses a service of type NodePort or LoadBalancer.
+
+
+
