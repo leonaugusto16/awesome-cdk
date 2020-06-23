@@ -6,7 +6,9 @@ import { YOUR_IP } from './utils/config';
 
 import { EksCluster } from './eks-cluster'
 import { IamGroupsEks } from './iam-groups'
-import { ServiceAccountEks } from './example-iam-service-account'
+import { ServiceAccountEks } from './service-account-name'
+import { ExampleServiceAccountEks } from './example-iam-service-account'
+import { AlbIngressControllerEks } from './alb-ingress-controller'
 
 export class AwesomeCdkStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
@@ -68,7 +70,11 @@ export class AwesomeCdkStack extends cdk.Stack {
       namespace: 'metrics'
     });
 
-    new ServiceAccountEks(this, 'ExamplePodWithRole', {clusterMain})
+    const constructServiceAccount = new ServiceAccountEks(this, 'ServiceAccount')
+    const serviceAccount = constructServiceAccount.createServiceAccount(clusterMain);
+    new ExampleServiceAccountEks(this, 'ExamplePodWithRole', {clusterMain, serviceAccount})
+
+    new AlbIngressControllerEks(this,'AlbIngressController',{clusterMain, serviceAccount})
 
   }
 }
