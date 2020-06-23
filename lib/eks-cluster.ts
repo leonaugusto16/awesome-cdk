@@ -33,7 +33,7 @@ export class EksCluster extends cdk.Construct {
       instanceType: new ec2.InstanceType('t2.medium'),
       machineImage: new eks.EksOptimizedImage(),
       keyName: KEY_NAME,
-      minCapacity: 1,
+      minCapacity: 2,
       maxCapacity: 5,
       desiredCapacity: 3,
       updateType: autoscaling.UpdateType.ROLLING_UPDATE,
@@ -55,7 +55,7 @@ export class EksCluster extends cdk.Construct {
       nodegroupName: 'NodeGroupCD',
       maxSize: 5,
       desiredSize: 3, 
-      minSize: 2,
+      minSize: 3,
       forceUpdate: true,
       labels: {
         "node": "node-group-cd"
