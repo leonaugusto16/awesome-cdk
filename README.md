@@ -216,9 +216,9 @@ Kubernetes supports 2 primary modes of finding a Service - environment variables
 ### External IP 
 Currently the Service does not have an External IP, so let’s now recreate the Service to use a cloud load balancer, just change the Type of my-nginx Service from ClusterIP to LoadBalancer.
 
-Apply k8s/example-exposing-service/10_run-my-nginx.yaml ...
+Apply examples in k8s/example-exposing-service/example-cluster-ip ...
 
-Now, you have EXTERNAL-IP. The IP address in the EXTERNAL-IP column is the one that is available on the public internet. The CLUSTER-IP is only available inside your cluster/private cloud network.
+The IP address in the EXTERNAL-IP column is the one that is available on the public internet. The CLUSTER-IP is only available inside your cluster/private cloud network.
 
 ### Ingress
 
@@ -231,6 +231,11 @@ Internet---[ Ingress ]--|--|--[ Services ]
 An Ingress can be configured to give services externally-reachable URLs, load balance traffic, terminate SSL, and offer name based virtual hosting. An Ingress controller is responsible for fulfilling the Ingress, usually with a loadbalancer, though it may also configure your edge router or additional frontends to help handle the traffic.
 
 An Ingress does not expose arbitrary ports or protocols. Exposing services other than HTTP and HTTPS to the internet typically uses a service of type NodePort or LoadBalancer.
+
+The alb needs a service account with specific permissions to be able to execute requests to AWS. In addition to a deployment to run on the cluster, this part is implemented in lib/alb-ingress-controller.
+
+Use a example with 2048 for tests ... Apply k8s/example-exposing-service/example-alb-ingress-controller 
+
 
 
 

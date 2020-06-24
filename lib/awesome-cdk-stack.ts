@@ -7,7 +7,7 @@ import { YOUR_IP } from './utils/config';
 import { EksCluster } from './eks-cluster'
 import { IamGroupsEks } from './iam-groups'
 import { ServiceAccountEks } from './service-account-name'
-import { ExampleServiceAccountEks } from './example-iam-service-account'
+import { ExampleServiceAccountEks } from './example/example-iam-service-account'
 import { AlbIngressControllerEks } from './alb-ingress-controller'
 
 export class AwesomeCdkStack extends cdk.Stack {
@@ -56,7 +56,7 @@ export class AwesomeCdkStack extends cdk.Stack {
     // Add Manifest to scale asg
     eksCluster.addAutoScaler(clusterMain, eksNodeGroup);
 
-    new IamGroupsEks(this, 'IamGroupsCluster', {clusterMain});
+    //new IamGroupsEks(this, 'IamGroupsCluster', {clusterMain});
 
     clusterMain.addResource('NamespaceMetrics',{
       apiVersion: 'v1',
@@ -71,9 +71,11 @@ export class AwesomeCdkStack extends cdk.Stack {
     });
 
     const constructServiceAccount = new ServiceAccountEks(this, 'ServiceAccount')
-    const serviceAccount = constructServiceAccount.createServiceAccount(clusterMain);
-    new ExampleServiceAccountEks(this, 'ExamplePodWithRole', {clusterMain, serviceAccount})
-
+    const serviceAccount = constructServiceAccount.createServiceAccount({
+      clusterMain,
+      serviceAccountName:'alb-ingress-controller',
+      namespace: 'kube-system'
+    });
     new AlbIngressControllerEks(this,'AlbIngressController',{clusterMain, serviceAccount})
 
   }

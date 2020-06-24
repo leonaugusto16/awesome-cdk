@@ -1,17 +1,22 @@
 import * as cdk from '@aws-cdk/core';
 import eks = require('@aws-cdk/aws-eks');
 
-export class ServiceAccountEks extends cdk.Construct {
-  constructor(scope: cdk.Construct, id: string) {
-    super(scope, id);
+export interface PropsServiceAccount{
+  clusterMain: eks.Cluster,
+  serviceAccountName: string,
+  namespace: string
+}
 
+export class ServiceAccountEks extends cdk.Construct {
+  constructor(scope: cdk.Construct, id: string, props?: PropsServiceAccount) {
+    super(scope, id);
   }
-  createServiceAccount(clusterMain: eks.Cluster){
+  createServiceAccount(props: PropsServiceAccount){
         // create service account to pod use 
         const account = new eks.ServiceAccount(this, 'ServiceAccount', {
-            cluster: clusterMain,
-            name: 'eks-test-service-account',
-            namespace: 'default'
+            cluster: props.clusterMain,
+            name: props.serviceAccountName,
+            namespace: props.namespace
         });
 
         return account;
