@@ -296,7 +296,7 @@ During the creation of the Node Group, we have configured a node-label so that k
 
 But this solution would only work if the cluster was created with eksctl, which isn't the case. In this case it makes more sense to add more capacity in the cluster with multiple families of instances. If you have a label rule you can add it to kubeletExtraArgs.
 
-```javascipt
+```javascript
     cluster.addCapacity('spot', {
     instanceType: new ec2.InstanceType('t3.large'),
     minCapacity: 2,
@@ -307,3 +307,10 @@ But this solution would only work if the cluster was created with eksctl, which 
     });
 ```
 
+See labels ...
+```s
+$ kubectl get nodes --label-columns=lifecycle --selector=lifecycle=Ec2Spot
+$ kubectl get nodes --label-columns=lifecycle --selector=lifecycle=OnDemand
+```
+
+**TODO: Test scaling without spot in market**
