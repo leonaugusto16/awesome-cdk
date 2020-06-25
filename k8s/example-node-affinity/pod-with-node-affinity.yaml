@@ -1,0 +1,37 @@
+# This node affinity rule says the pod can only be placed on a node
+# with a label whose key is azname and whose value is either az1 or az2.
+# In addition, among nodes that meet that criteria, nodes with a label
+# whose key is another-node-label-key and whose value is 
+# another-node-label-value should be preferred.
+
+# You can see the operator In being used in the example.
+# The new node affinity syntax supports the following operators:
+# In, NotIn, Exists, DoesNotExist, Gt, Lt. You can use NotIn and
+# DoesNotExist to achieve node anti-affinity behavior.
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: with-node-affinity
+spec:
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: azname
+            operator: In
+            values:
+            - az1
+            - az2
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 1
+        preference:
+          matchExpressions:
+          - key: another-node-label-key
+            operator: In
+            values:
+            - another-node-label-value
+  containers:
+  - name: with-node-affinity
+    image: us.gcr.io/k8s-artifacts-prod/pause:2.0

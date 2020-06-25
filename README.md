@@ -236,6 +236,53 @@ The alb needs a service account with specific permissions to be able to execute 
 
 Use a example with 2048 for tests ... Apply k8s/example-exposing-service/example-alb-ingress-controller 
 
+## Assigning pods to nodes
 
+You can constrain a pod to only be able to run on particular nodes or to prefer to run on particular nodes.
 
+Generally such constraints are unnecessary, as the scheduler will automatically do a reasonable placement (e.g. spread your pods across nodes, not place the pod on a node with insufficient free resources, etc.) but there are some circumstances where you may want more control on a node where a pod lands, e.g. to ensure that a pod ends up on a machine with an SSD attached to it, or to co-locate pods from two different services that communicate a lot into the same availability zone
+
+### NodeSelector
+
+nodeSelector is the simplest recommended form of node selection constraint. nodeSelector is a field of PodSpec. It specifies a map of key-value pairs. For the pod to be eligible to run on a node, the node must have each of the indicated key-value pairs as labels (it can have additional labels as well). The most common usage is one key-value pair.
+
+For example, can put a label on a node
+```s
+$ kubectl label nodes <NODE> disktype=ssd
+$ kubectl get nodes --show-labels
+```
+Apply example in k8s/example-nodeselector, see the node that the pod was launched (kubectl get pods -o wide)
+
+### Affinity and anti-affinity
+
+NodeSelector provides a very simple way to constrain pods to nodes with particular labels. The affinity/anti-affinity feature, currently in beta, greatly extends the types of constraints you can express. The key enhancements are:
+
+* The language is more expressive (not just “AND of exact match”)
+* You can indicate that the rule is “soft”/“preference” rather than a hard requirement, so if the scheduler can’t satisfy it, the pod will still be scheduled
+* You can constrain against labels on other pods running on the node (or other topological domain), rather than against labels on the node itself, which allows rules about which pods can and cannot be co-located
+
+The affinity feature consists of two types of affinity, “node affinity” and “inter-pod affinity/anti-affinity”. Node affinity is like the existing nodeSelector (but with the first two benefits listed above), while inter-pod affinity/anti-affinity constrains against pod labels rather than node labels, as described in the third item listed above, in addition to having the first and second properties listed above.
+
+#### Node affinity (beta feature)
+
+Node affinity was introduced as alpha in Kubernetes 1.2. Node affinity is conceptually similar to nodeSelector – it allows you to constrain which nodes your pod is eligible to be scheduled on, based on labels on the node.
+
+There are currently two types of node affinity, called **requiredDuringSchedulingIgnoredDuringExecution** and **preferredDuringSchedulingIgnoredDuringExecution**.
+
+You can think of them as “hard” and “soft” respectively, in the sense that the former specifies rules that must be met for a pod to be scheduled onto a node (just like nodeSelector but using a more expressive syntax), while the latter specifies preferences that the scheduler will try to enforce but will not guarantee. The “IgnoredDuringExecution” part of the names means that, similar to how nodeSelector works, if labels on a node change at runtime such that the affinity rules on a pod are no longer met, the pod will still continue to run on the node.
+
+Thus an example of requiredDuringSchedulingIgnoredDuringExecution would be “only run the pod on nodes with Intel CPUs” and an example preferredDuringSchedulingIgnoredDuringExecution would be “try to run this set of pods in availability zone XYZ, but if it’s not possible, then allow some to run elsewhere”.
+
+For example, can put a label on a node
+```s
+$ kubectl label nodes <SAME_NODE> azname=az1
+$ kubectl get nodes --show-labels
+```
+Apply example in k8s/example-node-affinity, see the node that the pod was launched (kubectl get pods -o wide). 
+
+#### More practical use-cases
+
+In a three node cluster, a web application has in-memory cache such as redis. We want the web-servers to be co-located with the cache as much as possible.
+
+See and apply example k8s/example-real-node-affinity. 
 
