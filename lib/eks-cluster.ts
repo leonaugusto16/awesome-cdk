@@ -33,7 +33,7 @@ export class EksCluster extends cdk.Construct {
       instanceType: new ec2.InstanceType('t2.medium'),
       machineImage: new eks.EksOptimizedImage(),
       keyName: KEY_NAME,
-      minCapacity: 3,
+      minCapacity: 2,
       maxCapacity: 5,
       desiredCapacity: 3,
       updateType: autoscaling.UpdateType.ROLLING_UPDATE,
