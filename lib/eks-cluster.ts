@@ -38,7 +38,8 @@ export class EksCluster extends cdk.Construct {
       desiredCapacity: 3,
       updateType: autoscaling.UpdateType.ROLLING_UPDATE,
       vpcSubnets: {subnetType: ec2.SubnetType.PUBLIC},
-      associatePublicIpAddress: true
+      associatePublicIpAddress: true,
+      spotPrice: "1"
     });
 
     nodeGroup.scaleOnCpuUtilization('up', {targetUtilizationPercent: 80})
