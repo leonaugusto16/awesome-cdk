@@ -337,5 +337,10 @@ See k8s/example-microservice-spot/ecs-demo-frontend
 
 The spec to configure NodeAffinity to prefer Spot Instances, but not require them. This will allow the pods to be scheduled on On-Demand nodes if no spot instances were available or correctly labelled. We also want to configure a toleration which will allow the pods to “tolerate” the taint that we configured on our EC2 Spot Instances.
 
+## Advanced VPC
 
+### Secondary CIDRS
 
+You can expand your VPC network by adding additional CIDR ranges. This capability can be used if you are running out of IP ranges within your existing VPC or if you have consumed all available RFC 1918 CIDR ranges within your corporate network. EKS supports additional IPv4 CIDR blocks in the 100.64.0.0/10 and 198.19.0.0/16 ranges.
+
+**TODO: Not implemented**
