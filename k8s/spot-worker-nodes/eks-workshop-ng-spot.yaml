@@ -1,0 +1,21 @@
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+metadata:
+  name: eksworkshop-eksctl 
+  region: ${AWS_REGION}
+nodeGroups:
+  - name: ng-spot
+    labels:
+      lifecycle: Ec2Spot
+    taints:
+      spotInstance: true:PreferNoSchedule
+    minSize: 2
+    maxSize: 5
+    instancesDistribution: # At least two instance types should be specified
+      instanceTypes:
+        - m4.large
+        - c4.large
+        - c5.large
+      onDemandBaseCapacity: 0
+      onDemandPercentageAboveBaseCapacity: 0 # all the instances will be spot instances
+      spotInstancePools: 2

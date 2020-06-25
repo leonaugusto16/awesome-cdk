@@ -286,3 +286,24 @@ In a three node cluster, a web application has in-memory cache such as redis. We
 
 See and apply example k8s/example-real-node-affinity. 
 
+## Spot Instances
+
+We have our EKS Cluster and worker nodes already, but we need some Spot Instances configured as workers. We also need a Node Labeling strategy to identify which instances are Spot and which are on-demand so that we can make more intelligent scheduling decisions.
+
+Using asg we can add the spot price (cdk), but this way we have a limitation in the instance family. See example k8s/spot-worker-nodes/eks-workshop-ng-spot.yaml. 
+
+During the creation of the Node Group, we have configured a node-label so that kubernetes knows what type of nodes we have provisioned. We set the lifecycle for the nodes as Ec2Spot. We are also tainting with PreferNoSchedule to prefer pods not be scheduled on Spot Instances. This is a “preference” or “soft” version of NoSchedule – the system will try to avoid placing a pod that does not tolerate the taint on the node, but it is not required.
+
+But this solution would only work if the cluster was created with eksctl, which isn't the case. In this case it makes more sense to add more capacity in the cluster with multiple families of instances. If you have a label rule you can add it to kubeletExtraArgs.
+
+```javascipt
+    cluster.addCapacity('spot', {
+    instanceType: new ec2.InstanceType('t3.large'),
+    minCapacity: 2,
+    bootstrapOptions: {
+        kubeletExtraArgs: '--node-labels foo=bar,goo=far',
+        awsApiRetryAttempts: 5
+    }
+    });
+```
+

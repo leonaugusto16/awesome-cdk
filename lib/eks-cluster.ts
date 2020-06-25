@@ -31,20 +31,27 @@ export class EksCluster extends cdk.Construct {
     let nodeGroup = new autoscaling.AutoScalingGroup(this, 'AsgEks', {
       vpc: props.vpc,
       instanceType: new ec2.InstanceType('t2.medium'),
-      machineImage: new eks.EksOptimizedImage(),
+      machineImage: new eks.EksOptimizedImage({
+        kubernetesVersion: '1.14'
+      }),
       keyName: KEY_NAME,
-      minCapacity: 2,
+      minCapacity: 1,
       maxCapacity: 5,
-      desiredCapacity: 3,
+      desiredCapacity: 1,
       updateType: autoscaling.UpdateType.ROLLING_UPDATE,
       vpcSubnets: {subnetType: ec2.SubnetType.PUBLIC},
       associatePublicIpAddress: true,
-      spotPrice: "1"
+      //spotPrice: "1"
     });
 
     nodeGroup.scaleOnCpuUtilization('up', {targetUtilizationPercent: 80})
     clusterMain.addAutoScalingGroup(nodeGroup, {
       mapRole: true
+    })
+    clusterMain.addCapacity('Spot',{
+      spotPrice: '0.1094',
+      instanceType: new ec2.InstanceType('t3.large'),
+      maxCapacity: 10
     })
 
     return nodeGroup

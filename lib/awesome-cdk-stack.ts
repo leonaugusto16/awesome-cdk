@@ -53,6 +53,7 @@ export class AwesomeCdkStack extends cdk.Stack {
       nodeRole: eksRole
     });
 
+
     // Add Manifest to scale asg
     eksCluster.addAutoScaler(clusterMain, eksNodeGroup);
 
