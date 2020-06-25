@@ -314,3 +314,28 @@ $ kubectl get nodes --label-columns=lifecycle --selector=lifecycle=OnDemand
 ```
 
 **TODO: Test scaling without spot in market**
+
+### AWS Node Termination Handler
+
+Demand for Spot Instances can vary significantly, and as a consequence the availability of Spot Instances will also vary depending on how many unused EC2 instances are available. It is always possible that your Spot Instance might be interrupted. In this case the Spot Instances are sent an interruption notice two minutes ahead to gracefully wrap up things. We will deploy a pod on each spot instance to detect and redeploy applications elsewhere in the cluster.
+
+The first thing that we need to do is deploy the AWS Node Termination Handler on each Spot Instance. This will monitor the EC2 metadata service on the instance for an interruption notice. The termination handler consists of a ServiceAccount, ClusterRole, ClusterRoleBinding, and a DaemonSet.
+
+The workflow can be summarized as:
+
+* Identify that a Spot Instance is being reclaimed.
+* Use the 2-minute notification window to gracefully prepare the node for termination.
+* Taint the node and cordon it off to prevent new pods from being placed.
+* Drain connections on the running pods.
+* Replace the pods on remaining nodes to maintain the desired capacity.
+
+### Deploy Application
+
+We are redesigning our Microservice example and want our frontend service to be deployed on Spot Instances when they are available. We will use Node Affinity in our manifest file to configure this.
+
+See k8s/example-microservice-spot/ecs-demo-frontend
+
+The spec to configure NodeAffinity to prefer Spot Instances, but not require them. This will allow the pods to be scheduled on On-Demand nodes if no spot instances were available or correctly labelled. We also want to configure a toleration which will allow the pods to “tolerate” the taint that we configured on our EC2 Spot Instances.
+
+
+

@@ -47,13 +47,20 @@ export class EksCluster extends cdk.Construct {
     nodeGroup.scaleOnCpuUtilization('up', {targetUtilizationPercent: 80})
     clusterMain.addAutoScalingGroup(nodeGroup, {
       mapRole: true
-    })
+    });
     clusterMain.addCapacity('Spot',{
       spotPrice: '0.1094',
       instanceType: new ec2.InstanceType('t3.large'),
       maxCapacity: 10
-    })
+    });
 
+    new eks.HelmChart(this, 'SpotHandler', {
+      cluster: clusterMain,
+      chart: 'aws-node-termination-handler',
+      repository: 'https://aws.github.io/eks-charts',
+      namespace: 'kube-system',
+      values: {'nodeSelector.lifecycle': 'Ec2Spot'}
+    });
     return nodeGroup
   }
 
