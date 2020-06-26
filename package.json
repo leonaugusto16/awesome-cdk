@@ -26,7 +26,9 @@
     "@aws-cdk/aws-eks": "^1.45.0",
     "@aws-cdk/aws-eks-legacy": "^1.45.0",
     "@aws-cdk/core": "1.45.0",
+    "@types/js-yaml": "^3.12.5",
     "dotenv": "^8.2.0",
+    "js-yaml": "^3.14.0",
     "source-map-support": "^0.5.19"
   }
 }
