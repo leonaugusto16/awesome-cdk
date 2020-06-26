@@ -344,3 +344,32 @@ The spec to configure NodeAffinity to prefer Spot Instances, but not require the
 You can expand your VPC network by adding additional CIDR ranges. This capability can be used if you are running out of IP ranges within your existing VPC or if you have consumed all available RFC 1918 CIDR ranges within your corporate network. EKS supports additional IPv4 CIDR blocks in the 100.64.0.0/10 and 198.19.0.0/16 ranges.
 
 **TODO: Not implemented**
+
+## Stateful Containers
+
+StatefulSet manages the deployment and scaling of a set of Pods, and provides guarantees about the ordering and uniqueness of these Pods, suitable for applications that require one or more of the following. * Stable, unique network identifiers * Stable, persistent storage * Ordered, graceful deployment and scaling * Ordered, automated rolling updates
+
+On Amazon EKS, the open-source EBS Container Storage Interface (CSI) driver is used to manage the attachment of Amazon EBS block storage volumes to Kubernetes Pods.
+```s
+$ kubectl kustomize github.com/kubernetes-sigs/aws-ebs-csi-driver/deploy/kubernetes/overlays/stable/?ref=master > ebs-csi-driver.yaml
+```
+
+### Storage Class
+
+Dynamic Volume Provisioning allows storage volumes to be created on-demand. StorageClass should be pre-created to define which provisioner should be used and what parameters should be passed when dynamic provisioning is invoked.
+
+### Config Map
+
+ConfigMap allow you to decouple configuration artifacts and secrets from image content to keep containerized applications portable. Using ConfigMap, you can independently control MySQL configuration.
+
+### Services
+
+Kubernetes Service defines a logical set of Pods and a policy by which to access them. Service can be exposed in different ways by specifying a type in the serviceSpec. StatefulSet currently requires a Headless Service to control the domain of its Pods, directly reach each Pod with stable DNS entries. By specifying “None” for the clusterIP, you can create Headless Service.
+
+### Statefulset
+
+StatefulSet consists of serviceName, replicas, template and volumeClaimTemplates: * serviceName is “mysql”, headless service we created in previous section * replicas is 3, the desired number of pod * template is the configuration of pod * volumeClaimTemplates is to claim volume for pod based on storageClassName, mysql-gp2 that we created in the Define Storageclass section.
+
+kubectl -n mysql rollout status statefulset mysql
+
+

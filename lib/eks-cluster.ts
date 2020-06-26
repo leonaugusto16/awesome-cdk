@@ -51,6 +51,7 @@ export class EksCluster extends cdk.Construct {
     clusterMain.addCapacity('Spot',{
       spotPrice: '0.1094',
       instanceType: new ec2.InstanceType('t3.large'),
+      minCapacity: 2,
       maxCapacity: 10
     });
 

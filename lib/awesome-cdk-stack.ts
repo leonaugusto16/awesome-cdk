@@ -9,6 +9,7 @@ import { IamGroupsEks } from './iam-groups'
 import { ServiceAccountEks } from './service-account-name'
 import { ExampleServiceAccountEks } from './example/example-iam-service-account'
 import { AlbIngressControllerEks } from './alb-ingress-controller'
+import { EbsCsiControllerEks } from './ebs-csi-driver'
 
 export class AwesomeCdkStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
@@ -78,6 +79,6 @@ export class AwesomeCdkStack extends cdk.Stack {
       namespace: 'kube-system'
     });
     new AlbIngressControllerEks(this,'AlbIngressController',{clusterMain, serviceAccount})
-
+    new EbsCsiControllerEks(this, 'EbsCsiController', {clusterMain})
   }
 }
