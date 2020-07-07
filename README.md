@@ -351,7 +351,7 @@ StatefulSet manages the deployment and scaling of a set of Pods, and provides gu
 
 On Amazon EKS, the open-source EBS Container Storage Interface (CSI) driver is used to manage the attachment of Amazon EBS block storage volumes to Kubernetes Pods.
 ```s
-$ kubectl kustomize github.com/kubernetes-sigs/aws-ebs-csi-driver/deploy/kubernetes/overlays/stable/?ref=master > ebs-csi-driver.yaml
+$ kubectl kustomize github.com/kubernetes-sigs/aws-ebs-csi-driver/deploy/kubernetes/overlays/stable/?ref=master > ebs-csi-driver.yaml --> Migrate to lib/ebs-csi-driver.ts
 ```
 
 ### Storage Class
@@ -370,6 +370,7 @@ Kubernetes Service defines a logical set of Pods and a policy by which to access
 
 StatefulSet consists of serviceName, replicas, template and volumeClaimTemplates: * serviceName is “mysql”, headless service we created in previous section * replicas is 3, the desired number of pod * template is the configuration of pod * volumeClaimTemplates is to claim volume for pod based on storageClassName, mysql-gp2 that we created in the Define Storageclass section.
 
-kubectl -n mysql rollout status statefulset mysql
+Apply Driver EBS with lib/ebscsi-driver.ts
+Apply project in k8s/example-storage-class
 
 

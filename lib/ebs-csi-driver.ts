@@ -12,13 +12,13 @@ export class EbsCsiControllerEks extends cdk.Construct {
   constructor(scope: cdk.Construct, id: string, props: ClusterProps) {
     super(scope, id);
 
-    const account = new eks.ServiceAccount(this, 'ServiceAccountEbsCsi', {
+    const accountIrsa = new eks.ServiceAccount(this, 'ServiceAccountEbsCsi', {
         cluster: props.clusterMain,
-        name: 'ebs-csi-controller-sa', // Same Service Account in ebs-csi-driver.yaml 
+        name: 'ebs-csi-controller-irsa', // Same Service Account in ebs-csi-driver.yaml 
         namespace: 'kube-system'
     });
 
-    account.addToPolicy(new iam.PolicyStatement({
+    accountIrsa.addToPolicy(new iam.PolicyStatement({
         resources: ['*'],
         actions: ["ec2:AttachVolume",
         "ec2:CreateSnapshot",
@@ -34,6 +34,7 @@ export class EbsCsiControllerEks extends cdk.Construct {
         "ec2:DetachVolume"]
     }));
 
+    const accountSa = 'ebs-csi-controller-sa'
     props.clusterMain.addResource('ServiceAccountEBS',{
       "apiVersion": "v1",
       "kind": "ServiceAccount",
@@ -41,7 +42,7 @@ export class EbsCsiControllerEks extends cdk.Construct {
         "labels": {
           "app.kubernetes.io/name": "aws-ebs-csi-driver"
         },
-        "name": account.serviceAccountName,
+        "name": accountSa,
         "namespace": "kube-system"
       }
     });
@@ -266,7 +267,7 @@ export class EbsCsiControllerEks extends cdk.Construct {
       "subjects": [
         {
           "kind": "ServiceAccount",
-          "name": account.serviceAccountName,
+          "name": accountIrsa.serviceAccountName,
           "namespace": "kube-system"
         }
       ]
@@ -289,7 +290,7 @@ export class EbsCsiControllerEks extends cdk.Construct {
       "subjects": [
         {
           "kind": "ServiceAccount",
-          "name": account.serviceAccountName,
+          "name": accountIrsa.serviceAccountName,
           "namespace": "kube-system"
         }
       ]
@@ -445,7 +446,7 @@ export class EbsCsiControllerEks extends cdk.Construct {
               "kubernetes.io/os": "linux"
             },
             "priorityClassName": "system-cluster-critical",
-            "serviceAccountName": account.serviceAccountName,
+            "serviceAccountName": accountIrsa.serviceAccountName,
             "tolerations": [
               {
                 "operator": "Exists"
