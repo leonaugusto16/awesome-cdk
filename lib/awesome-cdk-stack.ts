@@ -6,10 +6,11 @@ import { YOUR_IP } from './utils/config';
 
 import { EksCluster } from './eks-cluster'
 import { IamGroupsEks } from './iam-groups'
-import { ServiceAccountEks } from './service-account-name'
 import { ExampleServiceAccountEks } from './example/example-iam-service-account'
 import { AlbIngressControllerEks } from './alb-ingress-controller'
+import { AlbIngressControllerEksHelm } from './alb-ingress-controller-helm'
 import { EbsCsiControllerEks } from './ebs-csi-driver'
+import { FargateEks } from './fargate-profile'
 
 export class AwesomeCdkStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
@@ -55,11 +56,6 @@ export class AwesomeCdkStack extends cdk.Stack {
     });
 
 
-    // Add Manifest to scale asg
-    eksCluster.addAutoScaler(clusterMain, eksNodeGroup);
-
-    //new IamGroupsEks(this, 'IamGroupsCluster', {clusterMain});
-
     clusterMain.addResource('NamespaceMetrics',{
       apiVersion: 'v1',
       kind: 'Namespace',
@@ -72,13 +68,8 @@ export class AwesomeCdkStack extends cdk.Stack {
       namespace: 'metrics'
     });
 
-    const constructServiceAccount = new ServiceAccountEks(this, 'ServiceAccount')
-    const serviceAccount = constructServiceAccount.createServiceAccount({
-      clusterMain,
-      serviceAccountName:'alb-ingress-controller',
-      namespace: 'kube-system'
-    });
-    new AlbIngressControllerEks(this,'AlbIngressController',{clusterMain, serviceAccount})
-    new EbsCsiControllerEks(this, 'EbsCsiController', {clusterMain})
+    //EXAMPLE 2048
+    new FargateEks(this, 'FargateProfile', {clusterMain, namespace:'fargate'});
+    new AlbIngressControllerEksHelm(this, 'AlbFargate', {clusterMain, namespace:'fargate', vpc, region: this.region});
   }
 }
