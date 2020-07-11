@@ -28,11 +28,11 @@ export class EksCluster extends cdk.Construct {
   }
 
   createNodeGroup(clusterMain: eks.Cluster , props: EksProps){
-    let nodeGroup = new autoscaling.AutoScalingGroup(this, 'AsgEks', {
+    const nodeGroup = new autoscaling.AutoScalingGroup(this, 'AsgEks', {
       vpc: props.vpc,
       instanceType: new ec2.InstanceType('t2.medium'),
       machineImage: new eks.EksOptimizedImage({
-        kubernetesVersion: '1.14'
+        kubernetesVersion: '1.16'
       }),
       keyName: KEY_NAME,
       minCapacity: 1,
@@ -41,27 +41,30 @@ export class EksCluster extends cdk.Construct {
       updateType: autoscaling.UpdateType.ROLLING_UPDATE,
       vpcSubnets: {subnetType: ec2.SubnetType.PUBLIC},
       associatePublicIpAddress: true,
-      //spotPrice: "1"
+      spotPrice: "1"
     });
 
     nodeGroup.scaleOnCpuUtilization('up', {targetUtilizationPercent: 80})
     clusterMain.addAutoScalingGroup(nodeGroup, {
       mapRole: true
     });
-    clusterMain.addCapacity('Spot',{
-      spotPrice: '0.1094',
-      instanceType: new ec2.InstanceType('t3.large'),
-      minCapacity: 2,
-      maxCapacity: 10
-    });
+    // const spotNodes = clusterMain.addCapacity('Spot',{
+    //   spotPrice: '1',
+    //   instanceType: new ec2.InstanceType('t2.medium'),
+    //   minCapacity: 2,
+    //   maxCapacity: 10
+    // });
+    // spotNodes.node.addDependency(nodeGroup);
 
-    new eks.HelmChart(this, 'SpotHandler', {
-      cluster: clusterMain,
-      chart: 'aws-node-termination-handler',
-      repository: 'https://aws.github.io/eks-charts',
-      namespace: 'kube-system',
-      values: {'nodeSelector.lifecycle': 'Ec2Spot'}
-    });
+    // const podSpotHandler = new eks.HelmChart(this, 'SpotHandler', {
+    //   cluster: clusterMain,
+    //   chart: 'aws-node-termination-handler',
+    //   repository: 'https://aws.github.io/eks-charts',
+    //   namespace: 'kube-system',
+    //   values: {'nodeSelector.lifecycle': 'Ec2Spot'}
+    // });
+    // podSpotHandler.node.addDependency(spotNodes);
+
     return nodeGroup
   }
 
