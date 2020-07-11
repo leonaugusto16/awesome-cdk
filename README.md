@@ -373,4 +373,44 @@ StatefulSet consists of serviceName, replicas, template and volumeClaimTemplates
 Apply Driver EBS with lib/ebscsi-driver.ts
 Apply project in k8s/example-storage-class
 
+## EKS Fargate
 
+AWS Fargate is a technology that provides on-demand, right-sized compute capacity for containers. With AWS Fargate, you no longer have to provision, configure, or scale groups of virtual machines to run containers. This removes the need to choose server types, decide when to scale your node groups, or optimize cluster packing. You can control which pods start on Fargate and how they run with Fargate profiles, which are defined as part of your Amazon EKS cluster.
+
+### Fargate Profile
+
+The Fargate profile allows an administrator to declare which pods run on Fargate. Each profile can have up to five selectors that contain a namespace and optional labels. You must define a namespace for every selector. The label field consists of multiple optional key-value pairs. Pods that match a selector (by matching a namespace for the selector and all of the labels specified in the selector) are scheduled on Fargate.
+
+It is generally a good practice to deploy user application workloads into namespaces other than kube-system or default so that you have more fine-grained capabilities to manage the interaction between your pods deployed on to EKS.
+
+Fargate profiles are immutable. However, you can create a new updated profile to replace an existing profile and then delete the original after the updated profile has finished creating
+
+```javascript
+cluster.addFargateProfile('MyProfile', {
+  selectors: [ { namespace: '2048-game' } ]
+});
+```
+
+When your EKS cluster schedules pods on Fargate, the pods will need to make calls to AWS APIs on your behalf to do things like pull container images from Amazon ECR. The Fargate Pod Execution Role provides the IAM permissions to do this. This IAM role is automatically created for you by the above command.
+
+Notice that the profile includes the private subnets in your EKS cluster. Pods running on Fargate are not assigned public IP addresses, so only private subnets (with no direct route to an Internet Gateway) are supported when you create a Fargate profile. Hence, while provisioning an EKS cluster, you must make sure that the VPC that you create contains one or more private subnets.
+
+NOTE: Classic Load Balancers and Network Load Balancers are not supported on pods running on Fargate. For ingress, we recommend that you use the ALB Ingress Controller on Amazon EKS (minimum version v1.1.4).
+
+See in construct lib/fargate-profile.ts, implement profile fargate in specific namespace. Now, apply project k8s/example-2048-fargate. In the example we have 5 replicates, so we will have to go up 5 instances in the fargate. Every deploy in that namespace will be fargate!
+
+```s
+$ kubectl get nodes
+NAME                                               STATUS   ROLES    AGE    VERSION
+fargate-ip-10-0-0-141.us-east-2.compute.internal   Ready    <none>   35s    v1.16.8-eks-e16311
+fargate-ip-10-0-0-158.us-east-2.compute.internal   Ready    <none>   39s    v1.16.8-eks-e16311
+fargate-ip-10-0-0-166.us-east-2.compute.internal   Ready    <none>   31s    v1.16.8-eks-e16311
+fargate-ip-10-0-0-182.us-east-2.compute.internal   Ready    <none>   31s    v1.16.8-eks-e16311
+fargate-ip-10-0-0-185.us-east-2.compute.internal   Ready    <none>   30s    v1.16.8-eks-e16311
+ip-10-0-0-138.us-east-2.compute.internal           Ready    <none>   118m   v1.14.9-eks-49202c
+ip-10-0-0-187.us-east-2.compute.internal           Ready    <none>   118m   v1.14.9-eks-49202c
+ip-10-0-0-82.us-east-2.compute.internal            Ready    <none>   119m   v1.14.9-eks-49202c
+```
+Notice that the pods have been directly registered with the load balancer whereas when we worked with worker nodes in an earlier lab, the IP address of the worker nodes and the NodePort were registered as targets. The latter case is the Instance Mode where Ingress traffic starts at the ALB and reaches the Kubernetes worker nodes through each service’s NodePort and subsequently reaches the pods through the service’s ClusterIP. While running under Fargate, ALB operates in IP Mode, where Ingress traffic starts at the ALB and reaches the Kubernetes pods directly.
+
+NOTE: Created a construct to use the alb-controller helm in this example, be careful with Role's permissions, it changes from version to version of ALB. Don't forget to delete the ingress, it is not part of the cdk resources. Otherwise, won't be able to remove the vpc because the ALB will be attached to it.
