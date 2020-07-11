@@ -3,19 +3,25 @@ import eks = require('@aws-cdk/aws-eks');
 import iam = require('@aws-cdk/aws-iam')
 export interface ClusterProps{
     clusterMain: eks.Cluster,
-    serviceAccount: eks.ServiceAccount,
+    namespace: string,
 }
 
 export class AlbIngressControllerEks extends cdk.Construct {
   constructor(scope: cdk.Construct, id: string, props: ClusterProps) {
     super(scope, id);
 
-    props.serviceAccount.addToPolicy(new iam.PolicyStatement({
+    const serviceAccount = new eks.ServiceAccount(this, 'ServiceAccountALB',{
+        cluster: props.clusterMain,
+        name:'alb-ingress-controller',
+        namespace: props.namespace
+    });
+
+    serviceAccount.addToPolicy(new iam.PolicyStatement({
         resources: ['*'],
         actions: ["acm:DescribeCertificate","acm:ListCertificates","acm:GetCertificate"]
     }));
 
-    props.serviceAccount.addToPolicy(new iam.PolicyStatement({
+    serviceAccount.addToPolicy(new iam.PolicyStatement({
         resources: ['*'],
         actions: ["ec2:AuthorizeSecurityGroupIngress",
             "ec2:CreateSecurityGroup",
@@ -37,7 +43,7 @@ export class AlbIngressControllerEks extends cdk.Construct {
             "ec2:RevokeSecurityGroupIngress"]
     }));
 
-    props.serviceAccount.addToPolicy(new iam.PolicyStatement({
+    serviceAccount.addToPolicy(new iam.PolicyStatement({
         resources: ['*'],
         actions: ["elasticloadbalancing:AddListenerCertificates",
             "elasticloadbalancing:AddTags",
@@ -74,19 +80,19 @@ export class AlbIngressControllerEks extends cdk.Construct {
             "elasticloadbalancing:SetWebACL"]
     }));
 
-    props.serviceAccount.addToPolicy(new iam.PolicyStatement({
+    serviceAccount.addToPolicy(new iam.PolicyStatement({
         resources: ['*'],
         actions: ["iam:CreateServiceLinkedRole",
             "iam:GetServerCertificate",
             "iam:ListServerCertificates"]
     }));
 
-    props.serviceAccount.addToPolicy(new iam.PolicyStatement({
+    serviceAccount.addToPolicy(new iam.PolicyStatement({
         resources: ['*'],
         actions: ["cognito-idp:DescribeUserPoolClient"]
     }));
 
-    props.serviceAccount.addToPolicy(new iam.PolicyStatement({
+    serviceAccount.addToPolicy(new iam.PolicyStatement({
         resources: ['*'],
         actions: ["waf-regional:GetWebACLForResource",
             "waf-regional:GetWebACL",
@@ -94,12 +100,12 @@ export class AlbIngressControllerEks extends cdk.Construct {
             "waf-regional:DisassociateWebACL"]
     }));
 
-    props.serviceAccount.addToPolicy(new iam.PolicyStatement({
+    serviceAccount.addToPolicy(new iam.PolicyStatement({
         resources: ['*'],
         actions: ["tag:GetResources","tag:TagResources"]
     }));
 
-    props.serviceAccount.addToPolicy(new iam.PolicyStatement({
+    serviceAccount.addToPolicy(new iam.PolicyStatement({
         resources: ['*'],
         actions: ["waf:GetWebACL"]
     }));
@@ -108,8 +114,8 @@ export class AlbIngressControllerEks extends cdk.Construct {
         apiVersion: 'rbac.authorization.k8s.io/v1',
         kind: 'ClusterRole',
         metadata:{
-            labels: {'app.kubernetes.io/name': props.serviceAccount.serviceAccountName},
-            name: props.serviceAccount.serviceAccountName
+            labels: {'app.kubernetes.io/name': serviceAccount.serviceAccountName},
+            name: serviceAccount.serviceAccountName
         },
         rules: [{
             apiGroups: ["", "extensions"],
@@ -129,19 +135,19 @@ export class AlbIngressControllerEks extends cdk.Construct {
         kind: "ClusterRoleBinding",
         metadata: {
           labels: {
-            "app.kubernetes.io/name": props.serviceAccount.serviceAccountName
+            "app.kubernetes.io/name": serviceAccount.serviceAccountName
           },
-          name: props.serviceAccount.serviceAccountName
+          name: serviceAccount.serviceAccountName
         },
         roleRef: {
           apiGroup: "rbac.authorization.k8s.io",
           kind: "ClusterRole",
-          name: props.serviceAccount.serviceAccountName
+          name: serviceAccount.serviceAccountName
         },
         subjects: [{
             kind: "ServiceAccount",
-            name: props.serviceAccount.serviceAccountName,
-            namespace: "kube-system"
+            name: serviceAccount.serviceAccountName,
+            namespace: props.namespace
         }]
     });
     
@@ -149,17 +155,17 @@ export class AlbIngressControllerEks extends cdk.Construct {
         apiVersion: 'apps/v1',
         kind: 'Deployment',
         metadata: { 
-            labels: {'app.kubernetes.io/name': props.serviceAccount.serviceAccountName},
-            name: props.serviceAccount.serviceAccountName,
-            namespace: 'kube-system'
+            labels: {'app.kubernetes.io/name': serviceAccount.serviceAccountName},
+            name: serviceAccount.serviceAccountName,
+            namespace: props.namespace
         },
         spec: {
             selector: {
-                matchLabels: {'app.kubernetes.io/name': props.serviceAccount.serviceAccountName}
+                matchLabels: {'app.kubernetes.io/name': serviceAccount.serviceAccountName}
             },
             template: {
                 metadata: {
-                    labels: {'app.kubernetes.io/name': props.serviceAccount.serviceAccountName}
+                    labels: {'app.kubernetes.io/name': serviceAccount.serviceAccountName}
                 },
                 spec: {
                     containers: [{
@@ -167,7 +173,7 @@ export class AlbIngressControllerEks extends cdk.Construct {
                         args: ['--ingress-class=alb', '--cluster-name='+props.clusterMain.clusterName],
                         image: 'docker.io/amazon/aws-alb-ingress-controller:v1.1.4'
                     }],
-                    serviceAccountName: props.serviceAccount.serviceAccountName
+                    serviceAccountName: serviceAccount.serviceAccountName
                 },
             }
         }
