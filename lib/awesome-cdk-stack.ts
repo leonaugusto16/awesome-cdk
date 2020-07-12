@@ -11,6 +11,7 @@ import { AlbIngressControllerEks } from './alb-ingress-controller'
 import { AlbIngressControllerEksHelm } from './alb-ingress-controller-helm'
 import { EbsCsiControllerEks } from './ebs-csi-driver'
 import { FargateEks } from './fargate-profile'
+import { EfsEks } from './efs-controller'
 
 export class AwesomeCdkStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
@@ -41,7 +42,6 @@ export class AwesomeCdkStack extends cdk.Stack {
     sg.addIngressRule(ec2.Peer.ipv4(cidr), ec2.Port.allUdp(), "Configs Port");
     sg.addIngressRule(ec2.Peer.ipv4(cidr), ec2.Port.allTcp(), "Configs Port");
     sg.addIngressRule(ec2.Peer.ipv4(cidr), ec2.Port.allIcmp(), "Configs Port");
-    sg.addIngressRule(ec2.Peer.ipv4(YOUR_IP), ec2.Port.allTcp(), "Configs Port");
 
     const eksCluster = new EksCluster(this,'EKS-Cluster');
     const clusterMain = eksCluster.createClusterMain({
@@ -54,7 +54,6 @@ export class AwesomeCdkStack extends cdk.Stack {
       masterRole: eksClusterAdmin,
       nodeRole: eksRole
     });
-
 
     clusterMain.addResource('NamespaceMetrics',{
       apiVersion: 'v1',
@@ -69,7 +68,10 @@ export class AwesomeCdkStack extends cdk.Stack {
     });
 
     //EXAMPLE 2048
-    new FargateEks(this, 'FargateProfile', {clusterMain, namespace:'fargate'});
-    new AlbIngressControllerEksHelm(this, 'AlbFargate', {clusterMain, namespace:'fargate', vpc, region: this.region});
+    // new FargateEks(this, 'FargateProfile', {clusterMain, namespace:'fargate'});
+    // new AlbIngressControllerEksHelm(this, 'AlbFargate', {clusterMain, namespace:'fargate', vpc, region: this.region});
+
+    new EfsEks(this, 'EfsEks', {vpc, clusterMain, nodeGroup: eksNodeGroup});
+
   }
 }
