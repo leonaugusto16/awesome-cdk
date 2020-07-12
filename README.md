@@ -432,3 +432,24 @@ For AWS customers looking for a turn-key solution that doesn’t require signifi
 The result is that your EKS cluster will automatically run on an optimal blend of Spot Instances, Savings Plans and Reserved Instances as well as On-Demand when needed, so you can focus on higher value activities.
 
 See https://www.eksworkshop.com/beginner/190_ocean/
+
+## Kubernetes Secrets
+
+Kubernetes can store secrets that pods can access via a mounted volume. Today, Kubernetes secrets are stored with Base64 encoding, but security teams would prefer a stronger approach. Amazon EKS clusters version 1.13 and higher support the capability of encrypting your Kubernetes secrets using AWS Key Management Service (KMS) Customer Managed Keys (CMK). No changes in the way you are using secrets are required. The only requirement is to enable the encryption provider support during EKS cluster creation.
+
+The workflow is as follows:
+
+* The user (typically in an admin role) creates a secret.
+* The Kubernetes API server in the EKS control plane generates a Data Encryption Key (DEK) locally and uses it to encrypt the plaintext payload in the secret. Note that the control plane generates a unique DEK for every single write, and the plaintext DEK is never saved to disk.
+* The Kubernetes API server calls kms:Encrypt to encrypt the DEK with the CMK. This key is the root of the key hierarchy, and, in the case of KMS, it creates the CMK on a hardware security module (HSM). In this step, the API server uses the CMK to encrypt the DEK and also caches the base64 of the encrypted DEK.
+* The API server stores the DEK-encrypted secret in etcd.
+* If one now wants to use the secret in, say a pod via a volume (read-path), the reverse process takes place. That is, the API server reads the encrypted secret from etcd and decrypts the secret with the DEK.
+* The application, running in a pod on either EC2 or Fargate, can then consume the secret as usual.
+
+For most users, the default AWS KMS key store, which is protected by [FIPS 140-2](https://aws.amazon.com/blogs/security/aws-key-management-service-now-offers-fips-140-2-validated-cryptographic-modules-enabling-easier-adoption-of-the-service-for-regulated-workloads/) validated cryptographic modules, fulfills their security requirements. FIPS 140-2 Level 2 validation is sufficient for many use cases, but check with your security and compliance teams to verify.
+
+Keep in mind that the KMS Custom Key Store functionality makes use of a minimum of two AWS CloudHSM instances.
+
+Deploy the construct lib/kms-controller.ts to create a namespace, secret and a test pod
+
+
