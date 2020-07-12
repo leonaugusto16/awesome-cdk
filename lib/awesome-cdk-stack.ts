@@ -71,7 +71,7 @@ export class AwesomeCdkStack extends cdk.Stack {
     // new FargateEks(this, 'FargateProfile', {clusterMain, namespace:'fargate'});
     // new AlbIngressControllerEksHelm(this, 'AlbFargate', {clusterMain, namespace:'fargate', vpc, region: this.region});
 
-    new EfsEks(this, 'EfsEks', {vpc, clusterMain, nodeGroup: eksNodeGroup});
+    //new EfsEks(this, 'EfsEks', {vpc, clusterMain, nodeGroup: eksNodeGroup});
 
   }
 }

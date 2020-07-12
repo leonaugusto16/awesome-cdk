@@ -422,3 +422,13 @@ Amazon Elastic File System (Amazon EFS) provides a simple, scalable, fully manag
 Amazon EFS supports the Network File System version 4 (NFSv4.1 and NFSv4.0) protocol, so the applications and tools that you use today work seamlessly with Amazon EFS. Multiple Amazon EC2 instances can access an Amazon EFS file system at the same time, providing a common data source for workloads and applications running on more than one instance or server.
 
 The EFS Provisioner is deployed as a Pod that has a container with access to an AWS EFS file system. Deploy in lib/efs-controller.ts, the construct creates an EFS filesystem with connections to the node groups and the new user data to mount the partition. The construct starts Provisioner by the helm, creates a Storageclass and PVC to connect the pod to the partition. 
+
+## Spot.io
+
+Amazon EC2 Spot Instances offer AWS customers up to 90% cost savings in comparison to On-Demand Instances. However, they can be interrupted with a 2 minute warning when EC2 needs the capacity back. While this itself does not pose any issue for stateless workloads such as those typically running on Amazon EKS, managing larger clusters running Spot Instances as worker nodes on your own, does require a large amount of manual configuration, setup and maintenance.
+
+For AWS customers looking for a turn-key solution that doesn’t require significant time and effort, Ocean abstracts the nitty-gritty, EKS infrastructure management and provides an enterprise-level SLA for high availability, and data persistence.
+
+The result is that your EKS cluster will automatically run on an optimal blend of Spot Instances, Savings Plans and Reserved Instances as well as On-Demand when needed, so you can focus on higher value activities.
+
+See https://www.eksworkshop.com/beginner/190_ocean/
