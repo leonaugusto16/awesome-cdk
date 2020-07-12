@@ -12,6 +12,8 @@ import { AlbIngressControllerEksHelm } from './alb-ingress-controller-helm'
 import { EbsCsiControllerEks } from './ebs-csi-driver'
 import { FargateEks } from './fargate-profile'
 import { EfsEks } from './efs-controller'
+import { KmsEks } from './kms-controller'
+
 
 export class AwesomeCdkStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
@@ -72,6 +74,7 @@ export class AwesomeCdkStack extends cdk.Stack {
     // new AlbIngressControllerEksHelm(this, 'AlbFargate', {clusterMain, namespace:'fargate', vpc, region: this.region});
 
     //new EfsEks(this, 'EfsEks', {vpc, clusterMain, nodeGroup: eksNodeGroup});
+    new KmsEks(this, 'KmsEks', {clusterMain});
 
   }
 }
