@@ -22,7 +22,8 @@ export class EksCluster extends cdk.Construct {
     let clusterMain = new eks.Cluster(this, 'ClusterCD', {
         mastersRole: props.masterRole,
         vpc: props.vpc,
-        defaultCapacity: 0
+        defaultCapacity: 0,
+        version: eks.KubernetesVersion.V1_16
     });
     return clusterMain
   }
@@ -43,11 +44,11 @@ export class EksCluster extends cdk.Construct {
       associatePublicIpAddress: true,
       spotPrice: "1"
     });
-
     nodeGroup.scaleOnCpuUtilization('up', {targetUtilizationPercent: 80})
     clusterMain.addAutoScalingGroup(nodeGroup, {
       mapRole: true
     });
+
     // const spotNodes = clusterMain.addCapacity('Spot',{
     //   spotPrice: '1',
     //   instanceType: new ec2.InstanceType('t2.medium'),
