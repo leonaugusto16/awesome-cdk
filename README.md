@@ -414,3 +414,11 @@ ip-10-0-0-82.us-east-2.compute.internal            Ready    <none>   119m   v1.1
 Notice that the pods have been directly registered with the load balancer whereas when we worked with worker nodes in an earlier lab, the IP address of the worker nodes and the NodePort were registered as targets. The latter case is the Instance Mode where Ingress traffic starts at the ALB and reaches the Kubernetes worker nodes through each service’s NodePort and subsequently reaches the pods through the service’s ClusterIP. While running under Fargate, ALB operates in IP Mode, where Ingress traffic starts at the ALB and reaches the Kubernetes pods directly.
 
 NOTE: Created a construct to use the alb-controller helm in this example, be careful with Role's permissions, it changes from version to version of ALB. Don't forget to delete the ingress, it is not part of the cdk resources. Otherwise, won't be able to remove the vpc because the ALB will be attached to it.
+
+## Stateful EFS
+
+Amazon Elastic File System (Amazon EFS) provides a simple, scalable, fully managed elastic NFS file system for use with AWS Cloud services and on-premises resources. It is built to scale on demand to petabytes without disrupting applications, growing and shrinking automatically as you add and remove files, eliminating the need to provision and manage capacity to accommodate growth.
+
+Amazon EFS supports the Network File System version 4 (NFSv4.1 and NFSv4.0) protocol, so the applications and tools that you use today work seamlessly with Amazon EFS. Multiple Amazon EC2 instances can access an Amazon EFS file system at the same time, providing a common data source for workloads and applications running on more than one instance or server.
+
+The EFS Provisioner is deployed as a Pod that has a container with access to an AWS EFS file system. Deploy in lib/efs-controller.ts, the construct creates an EFS filesystem with connections to the node groups and the new user data to mount the partition. The construct starts Provisioner by the helm, creates a Storageclass and PVC to connect the pod to the partition. 
