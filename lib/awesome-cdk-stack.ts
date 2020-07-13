@@ -13,7 +13,8 @@ import { EbsCsiControllerEks } from './ebs-csi-driver'
 import { FargateEks } from './fargate-profile'
 import { EfsEks } from './efs-controller'
 import { KmsEks } from './kms-controller'
-
+import { SecretsEks } from './secrets-controller'
+import { SealedSecretsEks } from './sealed-secrets-controller'
 
 export class AwesomeCdkStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
@@ -69,12 +70,12 @@ export class AwesomeCdkStack extends cdk.Stack {
       namespace: 'metrics'
     });
 
-    //EXAMPLE 2048
-    // new FargateEks(this, 'FargateProfile', {clusterMain, namespace:'fargate'});
-    // new AlbIngressControllerEksHelm(this, 'AlbFargate', {clusterMain, namespace:'fargate', vpc, region: this.region});
+    // const control = new SecretsEks(this, 'SecretsEks', {clusterMain});
+    // control.variableSecret({clusterMain});
+    // control.volumeSecret({clusterMain});
 
-    //new EfsEks(this, 'EfsEks', {vpc, clusterMain, nodeGroup: eksNodeGroup});
-    new KmsEks(this, 'KmsEks', {clusterMain});
-
+    const control = new SealedSecretsEks(this, 'SealedSecretsEks', {clusterMain});
+    control.variableSecret({clusterMain});
+    
   }
 }
