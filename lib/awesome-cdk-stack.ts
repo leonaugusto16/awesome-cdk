@@ -5,16 +5,7 @@ import eks = require('@aws-cdk/aws-eks');
 import { YOUR_IP } from './utils/config';
 
 import { EksCluster } from './eks-cluster'
-import { IamGroupsEks } from './iam-groups'
-import { ExampleServiceAccountEks } from './example/example-iam-service-account'
-import { AlbIngressControllerEks } from './alb-ingress-controller'
-import { AlbIngressControllerEksHelm } from './alb-ingress-controller-helm'
-import { EbsCsiControllerEks } from './ebs-csi-driver'
-import { FargateEks } from './fargate-profile'
-import { EfsEks } from './efs-controller'
-import { KmsEks } from './kms-controller'
-import { SecretsEks } from './secrets-controller'
-import { SealedSecretsEks } from './sealed-secrets-controller'
+import { JenkinsEks } from './jenkins'
 
 export class AwesomeCdkStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
@@ -70,12 +61,7 @@ export class AwesomeCdkStack extends cdk.Stack {
       namespace: 'metrics'
     });
 
-    // const control = new SecretsEks(this, 'SecretsEks', {clusterMain});
-    // control.variableSecret({clusterMain});
-    // control.volumeSecret({clusterMain});
-
-    const control = new SealedSecretsEks(this, 'SealedSecretsEks', {clusterMain});
-    control.variableSecret({clusterMain});
+    new JenkinsEks(this, 'JenkinsEks', {clusterMain});
     
   }
 }
