@@ -452,4 +452,53 @@ Keep in mind that the KMS Custom Key Store functionality makes use of a minimum 
 
 Deploy the construct lib/kms-controller.ts to create a namespace, secret and a test pod
 
+## Sealed Secrets
 
+Kubernetes Secret is a resource that helps cluster operators manage the deployment of sensitive information such as passwords, OAuth tokens, and ssh keys etc. These Secrets can be mounted as data volumes or exposed as environment variables to the containers in a Pod, thus decoupling Pod deployment from managing sensitive data needed by the containerized applications within a Pod.
+
+It is a common practice for a DevOps Team to manage the YAML manifests for various Kubernetes resources and version control them using a Git repository. Additionally, they can integrate a Git repository with a GitOps workflow to do Continuous Delivery of such resources to an EKS cluster. The challenge here is about managing the YAML manifests for Kubernetes Secrets outside the cluster. The sesitive data in a Secret is obfuscated by using merely base64 encoding. Storing such files in a Git repository is extremely insecure as it is trivial to decode the base64 encoded data.
+
+Sealed Secrets provides a mechanism to encrypt a Secret object so that it is safe to store - even to a public repository. A SealedSecret can be decrypted only by the controller running in the Kubernetes cluster and nobody else is able to obtain the original Secret from a SealedSecret. Use SealedSecrets to encrypt YAML manifests pertaining to Kubernetes Secrets as well as be able deploy these encrypted Secrets to your EKS clusters using normal workflows.
+
+First, test the secrets as variables and volumes with pods in lib/secrets-controller.ts
+
+```javascript
+const control = new SecretsEks(this, 'SecretsEks', {clusterMain});
+control.variableSecret({clusterMain});
+control.volumeSecret({clusterMain});
+```
+
+Sealed Secrets is composed of two parts: - A cluster-side controller - A client-side utility called kubeseal.
+
+Upon startup, the controller looks for a cluster-wide private/public key pair, and generates a new 4096 bit RSA key pair if not found. The private key is persisted in a Secret object in the same namespace as that of the controller. The public key portion of this is made publicly available to anyone wanting to use SealedSecrets with this cluster.
+
+During encryption, each value in the original Secret is symmetrically encrypted using AES-256 with a randomly-generated session key. The session key is then asymmetrically encrypted with the controller’s public key using SHA256 and the original Secret’s namespace/name as the input parameter. The output of the encryption process is a string that is constructed as follows:
+length (2 bytes) of encrypted session key + encrypted session key + encrypted Secret
+
+When a SealedSecret custom resource is deployed to the Kubernetes cluster, the controller will pick it up, unseal it using the private key and create a Secret resource. During decryption, the SealedSecret’s namespace/name is used again as the input parameter. This ensures that the SealedSecret and Secret are strictly tied to the same namespace and name.
+
+The companion CLI tool kubeseal is used for creating a SealedSecret custom resource definition (CRD) from a Secret resource definition using the public key. kubeseal can communicate with the controller through the Kubernetes API server and retrieve the public key needed for encrypting a Secret at run-time. The public key may also be downloaded from the controller and saved locally to be used offline.
+
+Deploy sealed secrets controller in k8s/sealed-secrets-controller/controller.yaml
+
+Delete lib/secrets-controller.ts, kubeseal you can create yaml from binary, so let's use the secret we created earlier and add it to the CDK resource. 
+
+```s
+$ wget https://eksworkshop.com/beginner/200_secrets/secrets.files/kustomization.yaml
+$ kubectl kustomize . > secret.yaml
+$ kubeseal --format=yaml < secret.yaml > sealed-secret.yaml
+```
+An alternative approach is to fetch the public key from the controller and use it offline to seal your Secrets
+
+```s
+$ kubeseal --fetch-cert > public-key-cert.pem
+$ kubeseal --cert=public-key-cert.pem --format=yaml < secret.yaml > sealed-secret.yaml
+```
+
+Migrate sealed-secret.yaml to lib/sealed-secrets-controller.ts.
+
+```javascript
+const control = new SealedSecretsEks(this, 'SealedSecretsEks', {clusterMain});
+control.variableSecret({clusterMain});
+```
+The code lib/sealed-secrets-controller.ts, that pertains to the SealedSecret is safe to be stored in a Git repository along with YAML manifests pertaining to other Kubernetes resources such as DaemonSets, Deployments, ConfigMaps etc. deployed in the cluster.
